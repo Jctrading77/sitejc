@@ -1,8 +1,8 @@
 const IMAGES = [
   {
     src:
-      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
-    alt: 'Código em laptop com iluminação moderna',
+      'https://images.unsplash.com/photo-1621412165640-6fd5a46f3cc1?auto=format&fit=crop&w=1200&q=80&fm=jpg',
+    alt: 'Bitcoin em destaque, moeda dourada em close',
   },
   {
     src:
@@ -49,7 +49,14 @@ export default function Gallery() {
                 src={img.src}
                 alt={img.alt}
                 loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
                 className="h-64 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = 'https://s2.coinmarketcap.com/static/img/coins/128x128/1.png'
+                  e.currentTarget.className = 'h-64 w-full object-contain bg-white transition-transform duration-300 group-hover:scale-105'
+                }}
               />
               <figcaption className="px-4 py-3 text-sm text-gray-700">{img.alt}</figcaption>
             </figure>

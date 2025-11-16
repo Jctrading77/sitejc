@@ -26,10 +26,17 @@ export default function Hero() {
         <div className="mt-12 lg:mt-0 lg:flex-1">
           <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-gray-100 shadow-sm ring-1 ring-gray-900/10">
             <img
-              src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1600&q=80"
-              alt="Imagem herói moderna com ambiente de trabalho minimalista"
+              src="https://images.unsplash.com/photo-1621412165640-6fd5a46f3cc1?auto=format&fit=crop&w=1600&q=80&fm=jpg"
+              alt="Bitcoin em destaque, moeda dourada em close"
               loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
               className="h-full w-full object-cover"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = 'https://s2.coinmarketcap.com/static/img/coins/128x128/1.png'
+                e.currentTarget.className = 'h-full w-full object-contain bg-white'
+              }}
             />
           </div>
         </div>

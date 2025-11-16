@@ -6,15 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api/trending': {
-        target: 'https://api.dexscreener.com',
+      // Encaminha todas as chamadas /api para o vercel dev (funções)
+      '/api': {
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/trending/, '/latest/dex/trending'),
-      },
-      '/api/chains': {
-        target: 'https://api.llama.fi',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/chains/, '/chains'),
       },
     },
   },

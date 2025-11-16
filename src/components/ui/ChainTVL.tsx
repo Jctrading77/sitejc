@@ -21,7 +21,7 @@ export default function ChainTVL() {
       try {
         setLoading(true)
         let res = await fetch('/api/chains', { cache: 'no-store' })
-        if (!res.ok) {
+        if (!res.ok && import.meta.env.DEV) {
           res = await fetch('https://api.llama.fi/chains', { cache: 'no-store' })
         }
         if (!res.ok) throw new Error(`HTTP ${res.status}`)

@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react'
 
-type Pair = {
-  chainId?: string
-  dexId?: string
-  url?: string
-  pairAddress?: string
-  baseToken?: { address?: string; symbol?: string }
-  quoteToken?: { address?: string; symbol?: string }
-  priceUsd?: string
-  fdv?: number
-  volume?: { h24?: number }
+type Coin = {
+  id: number
+  name: string
+  symbol: string
+  slug?: string
+  quote?: {
+    USD?: {
+      price?: number
+      market_cap?: number
+      volume_24h?: number
+      percent_change_24h?: number
+    }
+  }
 }
 
-type TrendingResponse = {
-  pairs?: Pair[]
+type ListingsResponse = {
+  data?: Coin[]
 }
 
 const currency = new Intl.NumberFormat('pt-BR', {
@@ -23,7 +26,7 @@ const currency = new Intl.NumberFormat('pt-BR', {
 })
 
 export default function TrendingPairs() {
-  const [pairs, setPairs] = useState<Pair[]>([])
+  const [coins, setCoins] = useState<Coin[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -32,16 +35,13 @@ export default function TrendingPairs() {
       try {
         setLoading(true)
         // Tenta via proxy local/produção
-        let res = await fetch('/api/trending', { cache: 'no-store' })
-        if (!res.ok) {
-          // Fallback direto caso proxy não esteja disponível no dev
-          res = await fetch('https://api.dexscreener.com/latest/dex/trending', { cache: 'no-store' })
-        }
+        // Usa CoinMarketCap via função serverless
+        let res = await fetch('/api/cmc/listings?limit=6', { cache: 'no-store' })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data: TrendingResponse = await res.json()
-        setPairs((data.pairs || []).slice(0, 6))
+        const data: ListingsResponse = await res.json()
+        setCoins((data.data || []).slice(0, 6))
       } catch (err: any) {
-        setError(err?.message || 'Falha ao carregar tendências')
+        setError(err?.message || 'Falha ao carregar dados do CoinMarketCap')
       } finally {
         setLoading(false)
       }
@@ -53,10 +53,8 @@ export default function TrendingPairs() {
     <section className="bg-white">
       <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Tendências on-chain</h2>
-          <p className="mt-4 text-lg leading-8 text-gray-600">
-            Pares em destaque (DexScreener), com preço e volume 24h.
-          </p>
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Criptos em destaque</h2>
+          <p className="mt-4 text-lg leading-8 text-gray-600">Fonte: CoinMarketCap (Top {coins.length || 6}).</p>
         </div>
 
         {loading && (
@@ -68,50 +66,39 @@ export default function TrendingPairs() {
 
         {!loading && !error && (
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {pairs.map((p, i) => (
+            {coins.map((c, i) => (
               <article key={i} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {p.baseToken?.symbol} / {p.quoteToken?.symbol}
+                    {c.name} <span className="text-gray-500">({c.symbol})</span>
                   </h3>
-                  {p.chainId && (
-                    <span className="text-xs text-gray-500">{p.chainId}</span>
-                  )}
                 </div>
                 <dl className="mt-3 grid grid-cols-2 gap-4">
                   <div>
                     <dt className="text-sm text-gray-500">Preço (USD)</dt>
                     <dd className="text-base font-semibold text-gray-900">
-                      {p.priceUsd ? Number(p.priceUsd).toFixed(6) : '—'}
+                      {c.quote?.USD?.price != null ? Number(c.quote?.USD?.price).toFixed(6) : '—'}
                     </dd>
                   </div>
                   <div>
                     <dt className="text-sm text-gray-500">Volume 24h</dt>
                     <dd className="text-base font-semibold text-gray-900">
-                      {p.volume?.h24 ? currency.format(p.volume.h24) : '—'}
+                      {c.quote?.USD?.volume_24h != null ? currency.format(c.quote?.USD?.volume_24h) : '—'}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-gray-500">FDV</dt>
+                    <dt className="text-sm text-gray-500">Market Cap</dt>
                     <dd className="text-base font-semibold text-gray-900">
-                      {p.fdv ? currency.format(p.fdv) : '—'}
+                      {c.quote?.USD?.market_cap != null ? currency.format(c.quote?.USD?.market_cap) : '—'}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-gray-500">DEX</dt>
-                    <dd className="text-base font-semibold text-gray-900">{p.dexId || '—'}</dd>
+                    <dt className="text-sm text-gray-500">Variação 24h</dt>
+                    <dd className={`text-base font-semibold ${Number(c.quote?.USD?.percent_change_24h || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {c.quote?.USD?.percent_change_24h != null ? `${Number(c.quote?.USD?.percent_change_24h).toFixed(2)}%` : '—'}
+                    </dd>
                   </div>
                 </dl>
-                {p.url && (
-                  <a
-                    href={p.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-500"
-                  >
-                    Ver no DexScreener →
-                  </a>
-                )}
               </article>
             ))}
           </div>
