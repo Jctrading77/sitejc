@@ -1,5 +1,9 @@
 {
   "framework": "vite",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/trending", "destination": "https://api.dexscreener.com/latest/dex/trending" },
+    { "source": "/api/chains", "destination": "https://api.llama.fi/chains" }
+  ]
 }
